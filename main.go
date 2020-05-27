@@ -3,10 +3,11 @@ package main
 import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
-	"log"
 	"net/http"
 	"strings"
 )
+
+var all []string
 
 type lang struct {
 	name         string
@@ -30,7 +31,7 @@ func (ll langs) String() string {
 	return strings.Join(out, ", ")
 }
 
-func (l *lang) get() error {
+func (l *lang) traverse() error {
 
 	res, err := http.Get("https://en.wikipedia.org" + l.link)
 	if err != nil {
@@ -71,20 +72,22 @@ func build(node *goquery.Selection) []*lang {
 	return langs
 }
 
-func traverse(lang *lang) error {
+func traverse(lang *lang) {
+	if contains(all, lang.name) {
+		return
+	}
+	all = append(all, lang.name)
 	stmt := "💎 lang " + lang.String()
 
-	if err := lang.get(); err != nil {
-		return err
+	if err := lang.traverse(); err != nil {
+		fmt.Println("error during traversing", lang)
 	}
 
 	if lang.influencedBy != nil {
-		stmt += fmt.Sprintf(" 🚀 InfluencedBy %s", langs(lang.influencedBy))
+		stmt += fmt.Sprintf(" 🚀 Influenced By %s", langs(lang.influencedBy))
 
 		for _, l := range lang.influencedBy {
-			if err := traverse(l); err != nil {
-				return err
-			}
+			traverse(l)
 		}
 	}
 
@@ -92,16 +95,12 @@ func traverse(lang *lang) error {
 		stmt += fmt.Sprintf(" 🚀 Influenced %s", langs(lang.influenced))
 
 		for _, l := range lang.influenced {
-			if err := traverse(l); err != nil {
-				return err
-			}
+			traverse(l)
 		}
 	}
 
 	stmt += "\n"
 	fmt.Println(stmt)
-
-	return nil
 }
 
 func main() {
@@ -109,7 +108,14 @@ func main() {
 		name: "Go",
 		link: "/wiki/Go_(programming_language)",
 	}
-	if err := traverse(golang); err != nil {
-		log.Fatal(err)
+	traverse(golang)
+}
+
+func contains(ss []string, s string) bool {
+	for i := range ss {
+		if ss[i] == s {
+			return true
+		}
 	}
+	return false
 }
