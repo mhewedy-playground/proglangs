@@ -77,14 +77,14 @@ func traverse(lang *lang) {
 		return
 	}
 	all = append(all, lang.name)
-	stmt := "💎 lang " + lang.String()
+	stmt := "💎 lang: " + lang.String()
 
 	if err := lang.traverse(); err != nil {
-		fmt.Println("error during traversing", lang)
+		stmt += " ⚠️ (error during traversing)"
 	}
 
 	if lang.influencedBy != nil {
-		stmt += fmt.Sprintf(" 🚀 Influenced By %s", langs(lang.influencedBy))
+		stmt += fmt.Sprintf(" 🚀 Influenced By: %s", langs(lang.influencedBy))
 
 		for _, l := range lang.influencedBy {
 			traverse(l)
@@ -92,14 +92,13 @@ func traverse(lang *lang) {
 	}
 
 	if lang.influenced != nil {
-		stmt += fmt.Sprintf(" 🚀 Influenced %s", langs(lang.influenced))
+		stmt += fmt.Sprintf(" 🎈 Influences: %s", langs(lang.influenced))
 
 		for _, l := range lang.influenced {
 			traverse(l)
 		}
 	}
 
-	stmt += "\n"
 	fmt.Println(stmt)
 }
 
