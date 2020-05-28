@@ -79,6 +79,13 @@ func build(node *goquery.Selection) []*lang {
 	return langs
 }
 
+type jsobj struct {
+	l string
+	r string
+}
+
+var jsarr []jsobj
+
 func traverse(lang *lang) {
 	if contains(langMap, lang.name) {
 		return
@@ -96,6 +103,11 @@ func traverse(lang *lang) {
 		stmt += fmt.Sprintf(" 🚀 Influenced By: %s", langs(lang.influencedBy))
 
 		for _, l := range lang.influencedBy {
+			jsarr = append(jsarr, jsobj{
+				l: lang.name,
+				r: l.name,
+			})
+
 			traverse(l)
 		}
 	}
@@ -118,7 +130,49 @@ func main() {
 	}
 	traverse(golang)
 
-	select {}
+	// print format of highcharts.js
+	for _, e := range jsarr {
+		if in([]string{
+			"Go",
+			"C",
+			"B",
+			"Kotlin",
+			"PHP",
+			"C++",
+			"Lisp",
+			"Lua",
+			"Smalltalk",
+			"Java",
+			"JavaScript",
+			"Perl",
+			"Haskell",
+			"Rust",
+			"C#",
+			"Python",
+			"Scala",
+			"Dart",
+			"Erlang",
+			"Ruby",
+			"Elixir",
+			"Groovy",
+			"Objective-C",
+			"Swift",
+			"TypeScript",
+			"F#",
+			"Elm",
+		}, e.l) {
+			fmt.Printf("['%s', '%s', 1],\n", e.l, e.r)
+		}
+	}
+}
+
+func in(ss []string, s string) bool {
+	for i := range ss {
+		if ss[i] == s {
+			return true
+		}
+	}
+	return false
 }
 
 func contains(ss map[string]*lang, s string) bool {
