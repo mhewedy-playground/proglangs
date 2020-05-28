@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-var all []string
+var langMap = make(map[string]*lang)
 
 type lang struct {
 	name         string
@@ -63,20 +63,29 @@ func build(node *goquery.Selection) []*lang {
 	next := node.Parent().Next()
 
 	for _, n := range next.Find("td > a").Nodes {
+		var l *lang
 		langName := goquery.NewDocumentFromNode(n).Text()
-		langs = append(langs, &lang{
-			name: strings.ReplaceAll(langName, "(programming language)", ""),
-			link: n.Attr[0].Val,
-		})
+		// comment contains check in order to avoid deep links between objects
+		if contains(langMap, langName) {
+			l = langMap[langName]
+		} else {
+			l = &lang{
+				name: strings.ReplaceAll(langName, "(programming language)", ""),
+				link: n.Attr[0].Val,
+			}
+		}
+		langs = append(langs, l)
 	}
 	return langs
 }
 
 func traverse(lang *lang) {
-	if contains(all, lang.name) {
+	if contains(langMap, lang.name) {
 		return
 	}
-	all = append(all, lang.name)
+
+	langMap[lang.name] = lang
+
 	stmt := "💎 lang: " + lang.String()
 
 	if err := lang.traverse(); err != nil {
@@ -108,11 +117,13 @@ func main() {
 		link: "/wiki/Go_(programming_language)",
 	}
 	traverse(golang)
+
+	select {}
 }
 
-func contains(ss []string, s string) bool {
-	for i := range ss {
-		if ss[i] == s {
+func contains(ss map[string]*lang, s string) bool {
+	for k := range ss {
+		if k == s {
 			return true
 		}
 	}
